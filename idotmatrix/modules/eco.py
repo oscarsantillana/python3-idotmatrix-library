@@ -56,6 +56,6 @@ class Eco:
                 await self.conn.connect()
                 await self.conn.send(data=data)
             return data
-        except BaseException as error:
+        except Exception as error:
             self.logging.error(f"could not set the eco mode: {error}")
             return False

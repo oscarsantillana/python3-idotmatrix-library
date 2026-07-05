@@ -27,7 +27,7 @@ class Image:
                 await self.conn.connect()
                 await self.conn.send(data=data)
             return data
-        except BaseException as error:
+        except Exception as error:
             self.logging.error(f"could not enter image mode due to {error}")
             return False
 
@@ -92,7 +92,7 @@ class Image:
                 await self.conn.connect()
                 await self.conn.send(data=data)
             return data
-        except BaseException as error:
+        except Exception as error:
             self.logging.error(f"could not upload the unprocessed image: {error}")
             return False
 
@@ -122,6 +122,6 @@ class Image:
                     await self.conn.connect()
                     await self.conn.send(data=data)
                 return data
-        except BaseException as error:
+        except Exception as error:
             self.logging.error(f"could not upload processed image: {error}")
             return False

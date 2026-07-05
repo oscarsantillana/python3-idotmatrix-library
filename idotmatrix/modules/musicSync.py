@@ -32,7 +32,7 @@ class MusicSync:
                 await self.conn.connect()
                 await self.conn.send(data=data)
             return data
-        except BaseException as error:
+        except Exception as error:
             self.logging.error(f"could not set the microphone type: {error}")
             return False
 
@@ -61,7 +61,7 @@ class MusicSync:
                 await self.conn.connect()
                 await self.conn.send(data=data)
             return data
-        except BaseException as error:
+        except Exception as error:
             self.logging.error(f"could not set the image rhythm: {error}")
             return False
 
@@ -86,7 +86,7 @@ class MusicSync:
                 await self.conn.connect()
                 await self.conn.send(data=data)
             return data
-        except BaseException as error:
+        except Exception as error:
             self.logging.error(f"could not set the rhythm: {error}")
             return False
 

@@ -56,6 +56,6 @@ class FullscreenColor:
                 await self.conn.connect()
                 await self.conn.send(data=data)
             return data
-        except BaseException as error:
+        except Exception as error:
             self.logging.error(f"could not set the color: {error}")
             return False

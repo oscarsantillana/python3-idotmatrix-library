@@ -108,7 +108,7 @@ class Gif:
                         response=True,
                     )
             return data
-        except BaseException as error:
+        except Exception as error:
             self.logging.error(f"could not upload gif unprocessed: {error}")
             return False
 
@@ -155,6 +155,6 @@ class Gif:
                     for chunk in data:
                         await self.conn.send(data=chunk, response=True)
                 return data
-        except BaseException as error:
+        except Exception as error:
             self.logging.error(f"could not upload gif processed: {error}")
             return False

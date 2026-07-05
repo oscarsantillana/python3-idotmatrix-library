@@ -1,4 +1,4 @@
-from typing import Union
+from typing import List, Tuple, Union
 from ..connectionManager import ConnectionManager
 import logging
 
@@ -70,6 +70,30 @@ class Graffiti:
                 await self.conn.connect()
                 await self.conn.send(data=data)
             return data
-        except BaseException as error:
+        except Exception as error:
             self.logging.error(f"could not update the Graffiti Board: {error}")
             return False
+
+    async def setPixels(
+        self, pixels: List[Tuple[int, int, int, int, int]]
+    ) -> Union[bool, List[bytearray]]:
+        """Set multiple pixels of the graffiti board.
+
+        Each pixel is sent as its own BLE command: the device firmware
+        executes only the first command per GATT write, so pixel commands
+        can never be batched into a shared write.
+
+        Args:
+            pixels: list of (r, g, b, x, y) tuples.
+
+        Returns:
+            Union[bool, List[bytearray]]: False if any pixel failed
+            validation or sending, otherwise the list of sent commands.
+        """
+        commands: List[bytearray] = []
+        for r, g, b, x, y in pixels:
+            data = await self.setPixel(r=r, g=g, b=b, x=x, y=y)
+            if data is False:
+                return False
+            commands.append(data)
+        return commands
