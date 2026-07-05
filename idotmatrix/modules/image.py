@@ -96,6 +96,42 @@ class Image:
             self.logging.error(f"could not upload the unprocessed image: {error}")
             return False
 
+    async def uploadFrame(
+        self, image: PilImage.Image, pixel_size: int = 32, response: bool = False
+    ) -> Union[bool, bytearray]:
+        """Uploads an in-memory PIL image as one full frame (DIY mode).
+
+        Unlike per-pixel graffiti commands, a frame is a single command, so a
+        lost transmission only skips one frame instead of leaving stale
+        pixels — the next frame repaints the whole screen. This makes frame
+        streaming suitable for animations and games. Call setMode(1) once
+        before streaming frames.
+
+        Args:
+            image (PIL.Image.Image): frame to display; resized to
+                pixel_size x pixel_size if needed.
+            pixel_size (int, optional): display size (16 or 32). Defaults to 32.
+            response (bool): wait for the device acknowledgement of each
+                BLE chunk. Defaults to False for maximum frame rate.
+
+        Returns:
+            Union[bool, bytearray]: False if there's an error, otherwise returns bytearray payload
+        """
+        try:
+            if image.size != (pixel_size, pixel_size):
+                image = image.resize((pixel_size, pixel_size), PilImage.LANCZOS)
+            if image.mode != "RGB":
+                image = image.convert("RGB")
+            png_buffer = io.BytesIO()
+            image.save(png_buffer, format="PNG")
+            data = self._createPayloads(png_buffer.getvalue())
+            if self.conn:
+                await self.conn.send(data=data, response=response)
+            return data
+        except Exception as error:
+            self.logging.error(f"could not upload frame: {error}")
+            return False
+
     async def uploadProcessed(
         self, file_path: str, pixel_size: int = 32
     ) -> Union[bool, bytearray]:
