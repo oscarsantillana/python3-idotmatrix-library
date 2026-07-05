@@ -97,7 +97,11 @@ class Image:
             return False
 
     async def uploadFrame(
-        self, image: PilImage.Image, pixel_size: int = 32, response: bool = False
+        self,
+        image: PilImage.Image,
+        pixel_size: int = 32,
+        response: bool = False,
+        ack_last: bool = False,
     ) -> Union[bool, bytearray]:
         """Uploads an in-memory PIL image as one full frame (DIY mode).
 
@@ -113,6 +117,10 @@ class Image:
             pixel_size (int, optional): display size (16 or 32). Defaults to 32.
             response (bool): wait for the device acknowledgement of each
                 BLE chunk. Defaults to False for maximum frame rate.
+            ack_last (bool): acknowledge only the frame's final chunk —
+                one round trip per frame that keeps sustained streaming
+                from overrunning the device's buffer. Recommended for
+                continuous streaming.
 
         Returns:
             Union[bool, bytearray]: False if there's an error, otherwise returns bytearray payload
@@ -123,10 +131,10 @@ class Image:
             if image.mode != "RGB":
                 image = image.convert("RGB")
             png_buffer = io.BytesIO()
-            image.save(png_buffer, format="PNG")
+            image.save(png_buffer, format="PNG", optimize=True)
             data = self._createPayloads(png_buffer.getvalue())
             if self.conn:
-                await self.conn.send(data=data, response=response)
+                await self.conn.send(data=data, response=response, ack_last=ack_last)
             return data
         except Exception as error:
             self.logging.error(f"could not upload frame: {error}")

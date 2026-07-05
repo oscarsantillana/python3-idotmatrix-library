@@ -74,7 +74,7 @@ class ConnectionManager(metaclass=SingletonMeta):
             await self.client.disconnect()
             self.logging.info(f"disconnected from {self.address}")
 
-    async def send(self, data, response=False, retries: int = 1):
+    async def send(self, data, response=False, retries: int = 1, ack_last=False):
         """Send one command to the device.
 
         The device firmware executes only the FIRST command contained in a
@@ -90,6 +90,11 @@ class ConnectionManager(metaclass=SingletonMeta):
                 Slower (about one connection interval per write) but writes
                 cannot be dropped. Also enabled globally via ack_writes.
             retries (int): reconnect and retry attempts on write failure.
+            ack_last (bool): acknowledge only the final chunk. BLE writes are
+                ordered, so this one round trip confirms the whole command
+                arrived and throttles the sender to the device's pace without
+                paying a round trip per chunk. Ideal for streaming frames:
+                sustained throughput with a bounded device-side backlog.
 
         Returns:
             bool: True once sent, False if the connection could not be used.
@@ -106,10 +111,13 @@ class ConnectionManager(metaclass=SingletonMeta):
                     UUID_WRITE_DATA
                 ).max_write_without_response_size
                 for i in range(0, len(data), chunk_size):
+                    is_last = i + chunk_size >= len(data)
                     await self.client.write_gatt_char(
-                        UUID_WRITE_DATA, data[i : i + chunk_size], response=response
+                        UUID_WRITE_DATA,
+                        data[i : i + chunk_size],
+                        response=response or (ack_last and is_last),
                     )
-                if not response and self.send_delay > 0:
+                if not (response or ack_last) and self.send_delay > 0:
                     # non-blocking pacing; time.sleep here would stall the
                     # whole asyncio event loop for every command sent
                     await asyncio.sleep(self.send_delay)
